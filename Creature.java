@@ -1,0 +1,133 @@
+import java.util.Random;
+/**
+ * Условный базовый класс для наших созданий, или творений.
+ */
+public abstract class Creature implements SportInterface {
+
+    protected String name;
+    protected static Random rand;
+    protected boolean canContinue;
+    protected int maxRunDistance;
+    protected int maxJumpHeight;
+    protected int speed;
+    protected int time;
+
+    static {
+        rand = new Random();
+    }
+
+
+    Creature(String name, int speed) {
+        this.name = name;
+        this.speed = speed;
+        this.canContinue = true;
+
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isContinue() {
+        return canContinue;
+    }
+
+    public void start() {
+        time = 0;
+    }
+
+    public int finish() {
+        return time;
+    }
+
+    public int getSpeed() {
+        return speed;
+    }
+
+    /**
+     * Метод возвращающий время затраченное на прохождение дистанции.
+     * @param distance Расстояние.
+     * @param speed Скорость.
+     * @return Время в сек.
+     */
+    public int getTime(int distance, int speed) {
+        int result;
+        try {
+            result = distance / speed;
+        } catch (ArithmeticException e) {
+            result = Integer.MAX_VALUE;
+        }
+
+        return result;
+
+    }
+
+    /**
+     * Метод возвращающий случайное целое число. [min;max]
+     * @param max Максимально возможная граница. (включительно)
+     * @param min Минимально возможная граница. (включительно)
+     * @return Случайное целое число в диапазоне. [min;max]
+     */
+    public static int setMaxValue(int max, int min) {
+        return rand.nextInt(max - min + 1) + min + 1;
+    }
+
+    /**
+     * Метод возвращающий информацию о творении.
+     * @return Строка вида "Имя творения(макс/дистанция в метрах, макс/высота в сантиметрах, макс/скорость в м/с.)"
+     */
+    public String getInfo() {
+        return String.format("%s(Макс. дистанция %d м., Макс. высота %d см., Макс. скорость %d м/с)",
+                getName(), maxRunDistance, maxJumpHeight, getSpeed());
+    }
+
+
+    /**
+     * Метод возвращающий автоматическое имя творения.
+     * @param defaultName Строка с именем по-умолчанию.
+     * @param index  Целое число счетчика созданий.
+     */
+    public static String setDefaultName(String defaultName, int index) {
+        return String.format("%s № %d", defaultName, index);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s{%s %s}", getClass().getTypeName(), name, canContinue ? "может продолжать гонку" : "сошёл с дистанции");
+    }
+
+
+    /**
+     * Метод преодоления разных препятствий любыми созданиями.
+     *
+     * @param obstacle Препятствие.
+     */
+    @Override
+    public void overcoming(Obstacles obstacle) {
+        String separator = "-------------------------------------------------------------------";
+        int maxDimension = switch (obstacle.getDirection()) {
+            case horizontal -> maxRunDistance;
+            case vertical -> maxJumpHeight;
+        };
+
+        String action = switch (obstacle.getDirection()) {
+            case horizontal -> "пробежал дистанцию";
+            case vertical -> "перепрыгнул препятствие высотой";
+        };
+
+        if (obstacle.getDimension() > maxDimension || getSpeed() <= 0) canContinue = false;
+        if (!canContinue) {
+            System.out.println(separator);
+            System.out.printf("%s %s не может продолжать гонку%n", getClass().getTypeName(), getName());
+            System.out.printf("%s%n", getInfo());
+            System.out.println(separator);
+            time = Integer.MAX_VALUE;
+            return;
+        }
+        
+        System.out.printf("%s %s %s %d %s%n", getClass().getTypeName(), getName(), action, obstacle.getDimension(), obstacle.getUnit());
+        if (obstacle.getDirection() == Obstacles.Directions.horizontal)
+            time += getTime(obstacle.getDimension(), getSpeed());
+    }
+
+}
